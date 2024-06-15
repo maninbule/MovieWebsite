@@ -1,7 +1,13 @@
 package main
 
-import global "github/MovieWebsite/global/setting"
+import (
+	"github/MovieWebsite/global/logger"
+	"github/MovieWebsite/global/setting"
+)
 
 func main() {
-	global.SetupSetting()
+	setting.SetupSetting()
+	logger.InitLogger()
+
+	logger.Logger.Info("初始化完毕")
 }

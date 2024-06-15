@@ -2,7 +2,10 @@ module github/MovieWebsite
 
 go 1.22.0
 
-require github.com/spf13/viper v1.19.0
+require (
+	github.com/spf13/viper v1.19.0
+	gopkg.in/natefinch/lumberjack.v2 v2.2.1
+)
 
 require (
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
