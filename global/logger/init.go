@@ -1,4 +1,4 @@
-package logger
+package mylogger
 
 import (
 	"github/MovieWebsite/global/setting"

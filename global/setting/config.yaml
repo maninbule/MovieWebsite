@@ -14,7 +14,7 @@ Database:
   Username: root
   Password: 123456
   Host: 127.0.0.1:33306
-  DBName: movie
+  DBName: MovieDatabase
   Charset: utf8
   ParseTime: True
   MaxIdleConns: 10

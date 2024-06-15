@@ -1,19 +1,20 @@
-package logger
+package mylogger
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"gorm.io/gorm/logger"
 	"io"
 	"log"
 	"runtime"
 	"time"
 )
 
-type Level int8
+type Level logger.LogLevel
 
 const (
-	LevelDebug Level = iota
+	LevelDebug logger.LogLevel = iota
 	LevelInfo
 	LevelWarn
 	LevelError
@@ -23,8 +24,8 @@ const (
 
 type Fields map[string]interface{}
 
-func (l Level) String() string {
-	switch l {
+func String(level logger.LogLevel) string {
+	switch level {
 	case LevelDebug:
 		return "debug"
 	case LevelInfo:
@@ -43,10 +44,22 @@ func (l Level) String() string {
 }
 
 type LoggerImp struct {
+	loglevel  Level
 	newLogger *log.Logger
 	ctx       context.Context
 	fields    Fields
 	callers   []string
+}
+
+func (l *LoggerImp) LogMode(level logger.LogLevel) logger.Interface {
+	newlogger := *l
+	newlogger.loglevel = Level(level)
+	return &newlogger
+}
+
+func (l *LoggerImp) Trace(ctx context.Context, begin time.Time, fc func() (sql string, rowsAffected int64), err error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func NewLogger(w io.Writer, prefix string, flag int) *LoggerImp {
@@ -115,9 +128,9 @@ func (l *LoggerImp) WithCallersFrames() *LoggerImp {
 
 // JSONFormat 将要输出的key-value整合到一个map中
 
-func (l *LoggerImp) JSONFormat(level Level, message string) map[string]interface{} {
+func (l *LoggerImp) JSONFormat(level logger.LogLevel, message string) map[string]interface{} {
 	data := make(Fields, len(l.fields)+4)
-	data["level"] = level.String()
+	data["level"] = String(level)
 	data["time"] = time.Now().Local().UnixNano()
 	data["message"] = message
 	data["callers"] = l.callers
@@ -131,7 +144,7 @@ func (l *LoggerImp) JSONFormat(level Level, message string) map[string]interface
 
 //Output 将对应level级别内容进行log记录写入磁盘
 
-func (l *LoggerImp) Output(level Level, message string) {
+func (l *LoggerImp) Output(ctx context.Context, level logger.LogLevel, message string) {
 	marshal, _ := json.Marshal(l.JSONFormat(level, message))
 	content := string(marshal)
 	switch level {
@@ -152,50 +165,50 @@ func (l *LoggerImp) Output(level Level, message string) {
 
 // 各类级别信息级别的日志输出，外部调用
 
-func (l *LoggerImp) Info(v ...interface{}) {
-	l.Output(LevelInfo, fmt.Sprint(v...))
+func (l *LoggerImp) Info(ctx context.Context, s string, v ...interface{}) {
+	l.Output(ctx, LevelInfo, s+", "+fmt.Sprint(v...))
 }
 
-func (l *LoggerImp) Infof(format string, v ...interface{}) {
-	l.Output(LevelInfo, fmt.Sprintf(format, v...))
+func (l *LoggerImp) Infof(ctx context.Context, format string, v ...interface{}) {
+	l.Output(ctx, LevelInfo, fmt.Sprintf(format, v...))
 }
 
-func (l *LoggerImp) Debug(v ...interface{}) {
-	l.Output(LevelInfo, fmt.Sprint(v...))
+func (l *LoggerImp) Debug(ctx context.Context, s string, v ...interface{}) {
+	l.Output(ctx, LevelInfo, s+", "+fmt.Sprint(v...))
 }
 
-func (l *LoggerImp) Debugf(format string, v ...interface{}) {
-	l.Output(LevelInfo, fmt.Sprintf(format, v...))
+func (l *LoggerImp) Debugf(ctx context.Context, format string, v ...interface{}) {
+	l.Output(ctx, LevelInfo, fmt.Sprintf(format, v...))
 }
 
-func (l *LoggerImp) Warn(v ...interface{}) {
-	l.Output(LevelInfo, fmt.Sprint(v...))
+func (l *LoggerImp) Warn(ctx context.Context, s string, v ...interface{}) {
+	l.Output(ctx, LevelInfo, s+", "+fmt.Sprint(v...))
 }
 
-func (l *LoggerImp) Warnf(format string, v ...interface{}) {
-	l.Output(LevelInfo, fmt.Sprintf(format, v...))
+func (l *LoggerImp) Warnf(ctx context.Context, format string, v ...interface{}) {
+	l.Output(ctx, LevelInfo, fmt.Sprintf(format, v...))
 }
 
-func (l *LoggerImp) Error(v ...interface{}) {
-	l.Output(LevelInfo, fmt.Sprint(v...))
+func (l *LoggerImp) Error(ctx context.Context, s string, v ...interface{}) {
+	l.Output(ctx, LevelInfo, s+", "+fmt.Sprint(v...))
 }
 
-func (l *LoggerImp) Errorf(format string, v ...interface{}) {
-	l.Output(LevelInfo, fmt.Sprintf(format, v...))
+func (l *LoggerImp) Errorf(ctx context.Context, format string, v ...interface{}) {
+	l.Output(ctx, LevelInfo, fmt.Sprintf(format, v...))
 }
 
-func (l *LoggerImp) Fatal(v ...interface{}) {
-	l.Output(LevelInfo, fmt.Sprint(v...))
+func (l *LoggerImp) Fatal(ctx context.Context, v ...interface{}) {
+	l.Output(ctx, LevelInfo, fmt.Sprint(v...))
 }
 
-func (l *LoggerImp) Fatalf(format string, v ...interface{}) {
-	l.Output(LevelInfo, fmt.Sprintf(format, v...))
+func (l *LoggerImp) Fatalf(ctx context.Context, format string, v ...interface{}) {
+	l.Output(ctx, LevelInfo, fmt.Sprintf(format, v...))
 }
 
-func (l *LoggerImp) Panic(v ...interface{}) {
-	l.Output(LevelInfo, fmt.Sprint(v...))
+func (l *LoggerImp) Panic(ctx context.Context, v ...interface{}) {
+	l.Output(ctx, LevelInfo, fmt.Sprint(v...))
 }
 
-func (l *LoggerImp) Panicf(format string, v ...interface{}) {
-	l.Output(LevelInfo, fmt.Sprintf(format, v...))
+func (l *LoggerImp) Panicf(ctx context.Context, format string, v ...interface{}) {
+	l.Output(ctx, LevelInfo, fmt.Sprintf(format, v...))
 }
